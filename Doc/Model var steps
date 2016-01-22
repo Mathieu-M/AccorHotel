@@ -1,0 +1,61 @@
+
+# Hypothèses du modèle var:
+  * linéarité des relations
+  * stationnarité des variables considérées au second ordre (faible)
+  * non cointégration pour des flux
+  
+Qu'est-ce que la cointégration?
+stationnarité: z=(x,y), si x non stationnaire et y oui => ? 
+
+# Stationnarité au second ordre:
+  * E(Xt²)<inf pour tout t
+  * E(Xt)=M
+  * cov(Xt,Xt+h)=gamma(h)
+
+# Def model var:
+  * un bruit blanc et
+  * des matrices phij carrées tq:
+      Xt - sum(phij * Xt-j) = mu + et
+      On note phi(L) = Id - sum(phij * Lj)
+      Le processus est asymptotiquement stationnaire ssi les racines de phi sont de modules > 1.
+
+Pourquoi doit-on spécifier un Y et un Z? 
+
+# Estimation coef du model:
+  * MCG sur tout = MCO sur chaque equations si:
+    - pas de corrélation inter equation (pour les blocs d'equations: Y et Z) ou
+    - les variables explicatives sont les mêmes dasn toutes les equations
+
+Pour rendre independanets les perturbations des equations on orthogonalise le model var (cf page8 chap 3).
+
+Pourquoi ne pas simplement utiliser les MCG?
+
+
+# Sélection du nombre optimal de retard:
+Il y a n(np+1) parametres a estimer avec nT observations sur une période T. Il faut donc T >= np+1.
+Il faut peu de variables por avoir moins de parametres a estimer donc necessite d'une pre-selection de variables.
+
+Criteres de selection: FPE, AIC, HQ, BIC.
+
+n=nombre de varaibles
+m=nombre de retard introduits
+T=taille de l'echantillon
+
+FPE:
+  FPE(m) = [(T+n*m+1)/(T-n*m-1)]^n * det(sigma(m))
+  ou sigma(m) est l'estimateur du maximum de vraisemblance de la matrice de variance-covariance des perturbations. On cherche le m qui minimise le Final Predictor Error.
+  
+AIC: 
+  AIC(m) = log(det(sigma(m))) + 2*m*n²/T
+  On minimise ce critere.
+  
+HQ: Hannan-Quinn
+  HQ(m) = log(det(sigma(m))) + 2log(log(T))*m*n²/T
+  On minimise ce critere.
+  
+BIC:
+  BIC(m) = log(det(sigma(m))) + 2log(T)*m*n²/T
+  On minimise ce critere.
+
+AIC et FPE sont meilleurs pour de petits echantillons.
+

@@ -1,0 +1,278 @@
+---
+title: "VAR model"
+author: "Lucas Dupont and Mathieu Marauri"
+output:
+  pdf_document:
+    keep_tex: no
+    number_sections: yes
+    toc: yes
+header-includes: \usepackage{float}
+---
+
+# Introduction
+
+In this document we will use the following notations:
+
+* $X_{t}$ will stand for a time serie. If a second time serie is needed we will use $Y_{y}$.
+* B stands for the lag or backshift operator. $B(X_{t})=X_{t-1}$.
+
+The necessary steps to perform a VAR model will be presented in this document. 
+
+Several hypotheses on the series must be verified to compute a VAR model:
+
+* they must be stationary. The definition is givne in \nameref{subsec:annexA}.
+* they must not be co-integrated
+
+
+# The stationarity
+
+Every time series incorporated in the model must be stationary. Before testing the series we must know if there is a trend or a season. Graphically we can detect a trend or even a season. Plotting the serie is therefore a good start. 
+
+## Test for a linear trend
+
+The non-parametric Mann-Kendall trend test is used to detect a linear trend. The null hypothesis is no linear trend whereas the alternative hypothesis is a linear trend in the serie. The function used to perform this test is the 'MannKendall' function from the 'Kendall' package. 
+
+This test is described in \nameref{subsec:annexB}.
+
+If a trend is detected we have to de-trend the serie. To do so we can differentiate the time serie:
+$(1-B)*X_{t}$.
+
+## How to detect a seasonal pattern
+
+A good way to see if there is a trend, besides plotting the serie, is to graph the power spectrum (\nameref{subsec:annexC}). If no pics can be observed then we can consider that there is no seasonal pattern. Otherwise prominent pikes indicates a season at the given period (12 for months for instance). 
+
+In R the function 'periodogram' from the 'TSA' package can be used.
+
+To remove the seasonal pattern we an differentiate the serie using $(1-B^s)$ where s stands for the period. This operator applied to a monthly seasonal serie $X_{t}$ removes the season.
+
+## The staionarity itself
+
+After having removed the trend and the seasonal pattern we have to check if the serie is staionary. To do so we use a unit root test: the augmented Dickey Fuller test. The null hypothesis is that the serie is non-stationary. The function we use is the 'adf.test' from the 'tseries' packages.
+
+The test is described in \nameref{subsec:annexD}.
+
+In order to deal with stationary issues we have to differentiate the serie.
+
+At the end the sationarity of a time serie is easily obtained by differentiating the time serie. This operation takes care of the trend, the seasonal pattern and the stationarity issue. 
+
+# The co-integration
+
+Two time series, $X_{t}$ and $Y_{t}$, are said to be co-integrated if:
+
+* $X_{t}$ and $Y_{t}$ are integrated of order one,
+* there exist $\mu$ and $\beta$ such that we have:
+   $Y_{t}=\mu + \beta*X_{t} + u_{t}$ (1) where $u_{t}$ are the residuals,
+   and $u_{t}$ are stationary.
+
+The process to detect co-integration is the following, as defined by Engle-Granger:
+
+**Step 1**: get the order of integration of our series. If they are of order one we can proceed to the next step. If one of them is stationary then they are not co-integrated.
+
+**Step 2**: compute the regression defined above (1). Keep the residuals terms for the next step.
+
+**Step 3**: perform an augmented Dickey-Fuller unit root test o the residuals. If they are stationary then there is co-integration. This means that the null hypothesis of a unit root is rejected. Else the series do not co-integrate.
+
+The 'egcm' function from the 'egcm' package performs the Engle-Granger approach.
+
+The previous process is obtained from:
+
+https://stats.stackexchange.com/questions/130660/test-for-cointegration-between-two-time-series-using-engle-granger-two-step-meth
+
+At this point we can safely perform a VAR model. To do so we use the 'VAR' function from the 'vars' package.
+
+# Diagnostic of a VAR model
+
+A VAR model has been computed, we have the following equations, for two time series:
+
+\begin{equation}
+\left\lbrace
+\begin{array}{c}
+X_{t} = \alpha_1 + \sum\limits_{i=1}^{k}\beta_{11,i}X_{t-i} + \sum\limits_{i=1}^{k}\beta_{12,i}Y_{t-i} + \epsilon_{1,t}\\
+Y_{t} = \alpha_1 + \sum\limits_{i=1}^{k}\beta_{21,i}Y_{t-i} + \sum\limits_{i=1}^{k}\beta_{22,i}X_{t-i} + \epsilon_{2,t}\\
+\end{array}\right.
+\end{equation}
+
+Where $\epsilon_{1,t}~and~\epsilon_{2,t}$ are white noise with variance respectively equal to $\sigma_1^2~and~\sigma_2^2$. The error terms must be uncorrelated that is to say we must have:
+
+$$
+E(\epsilon_{1,t}\epsilon_{2,t-j})=0,~\forall j~in~\mathbb{Z}\setminus\lbrace{0}\rbrace
+$$
+
+In order to test:
+
+\begin{equation}
+\left\lbrace
+\begin{array}{c}
+(H_0): \epsilon~is~a~white~noise\\
+(H_1): \epsilon~is~not\\
+\end{array}\right.
+\end{equation}
+
+We use the Ljung-Box test. It is further explained in \nameref{subsec:annexE}.
+
+We must not reject the null hypothesis. 
+
+# Conclusion
+
+The process described in this document requires several hypotheses to be tested. TODO: what comes next if some hypotheses are not checked.
+
+# Annexes
+
+In this section the different methods are more precisely explained.
+
+## Annex A: the weak stationarity
+\label{subsec:annexA}
+
+The stationary that need to be verified is the weak stationary. A serie $X_{t}$ is stationary if:
+
+* $E(X_{t}^2) < \infty,  \forall t$ ,
+* $E(X_{t}) = M$,
+* $\forall t,~\forall h,~cov(X_{t},X_{t+h}) = \gamma(h)$
+
+## Annex B: Mann-Kendall trend test
+\label{subsec:annexB}
+
+The Mann-Kendall (MK) test statistically assesses if there is a monotonic  trend in the time serie. This trend may or may not be linear. It is a non-parametric test. The process described below is obtained from:
+
+http://vsp.pnnl.gov/help/Vsample/Design_Trend_Mann_Kendall.htm
+
+The hypotheses are:
+
+\begin{equation}
+\left\lbrace
+\begin{array}{c}
+(H_{0}) = no~monotonic~trend\\
+(H_{1}) = monotonic~trend\\
+\end{array}\right.
+\end{equation}
+
+We note $x_{1}, x_{2},...,x_{n} the observations.
+
+We compute $sign(x_{j}-x_{k})~\forall~j>k$ where 
+
+\begin{equation}
+sign(x_{j}-x_{k}) = 
+\left\lbrace
+\begin{array}{c}
+1~~if~x_{j}-x_{k}>0\\
+0~~if~x_{j}-x_{k}=0\\
+-1~~if~x_{j}-x_{k}<0\\
+\end{array}\right.
+\end{equation}
+
+Then we compute $S=\sum\limits_{k=1}^{n-1}\sum\limits_{j=k+1}^{n} sign(x_{j}-x_{k})$
+
+For the statistic we need to have the variance of S which is given by:
+
+$$
+Var(S)=\frac{1}{18}[n(n-1)(2n+5)-\sum\limits_{p=1}^{g}t_{p}(t_{p}-1)(2t_{p}+5)]
+$$
+
+with:
+
+* g = the number of tied groups,
+* $t_{p}$ the number of observations in the $p^{th}$ tied group
+
+Finally we have the Mann-Kendall test statistic $Z_{MK}$:
+
+\begin{equation}
+Z_{MK} = 
+\left\lbrace
+\begin{array}{c}
+\frac{S-1}{\sqrt{Var(S)}},~if~S>0\\
+0,~if~S=0\\
+\frac{S+1}{\sqrt{Var(S)}},~if~S<0\\
+\end{array}\right.
+\end{equation}
+
+Under $H_{0}$ $Z_{MK}$ follows a normal distribution. Therefore we reject the null hypothesis of no monotonic trend if we have:
+
+$$
+|Z_{MK}|\geq Z_{1-\alpha/2}
+$$
+
+Where $Z_{1-\alpha/2}$ is the quantile of order $1-\alpha/2$ of a normal distribution.
+
+
+## Annex C: power spectrum
+\label{subsec:annexC}
+
+In order to detect a seasonal pattern one can use the graph of the power spectrum of the serie. The periodogram graphs a measure of the relative importance of possible frequency values that might explain the oscillation pattern of the observed data.
+
+We note $x_{1}, x_{2},...,x_{n}$ the observations and $\omega_{j}=\frac{j}{n}~for~j=1,2,...,n/2$. $\omega_{j}$ are the possible frequencies.
+
+The serie $x_{t}$ is represented as follow:
+
+\[x_t = \sum_{j=1}^{n/2}\left[\beta_1\left(\frac{j}{n}\right)\cos(2\pi \omega_j t) + \beta_2\left(\frac{j}{n}\right)\sin(2\pi \omega_j t)\right]. \]
+
+We can see $\beta_1\left(\frac{j}{n}\right)$ and $\beta_2\left(\frac{j}{n}\right)$ as regression parameters. Since j goes from 1 to n/2 there are n parameters. To estimate the parameters we use the Fast Fourier Transform. Once the parameters have been estimated we define:
+
+\[P\left(\frac{j}{n}\right) = \hat{\beta}^2_1\left(\frac{j}{n}\right)+\hat{\beta}^2_2\left(\frac{j}{n}\right)\]
+
+This is the value of the periodogram at frequency j/n. 
+
+The previous information were obtained on the following website:
+
+https://onlinecourses.science.psu.edu/stat510/?q=book/export/html/52
+
+https://stats.stackexchange.com/questions/16117/what-method-can-be-used-to-detect-seasonality-in-data
+
+## Annex D: the augmented Dickey Fuller test.
+\label{subsec:annexD}
+
+The augmented Dickey-Fuller tests:
+
+\begin{equation}
+\left\lbrace
+\begin{array}{c}
+(H_{0}) = \rho=1\\
+(H_{1}) = \rho\ne1\\
+\end{array}\right.
+\end{equation}
+
+in the following equation:
+
+$$
+X_{t}=\alpha + \beta t + \rho  X_{t-1} + \sum\limits_{i=1}^{k}\theta_{i}\Delta X_{t-i} + \epsilon_{t}
+$$
+
+The parameter k is an argument of the 'adf.test' function. 
+
+The test statistic is:
+
+$$
+\Phi=\frac{(SCR_0-SCR_1)/2}{SCR_1/(n-3)}
+$$
+
+Where $SCR_{0}$ stands for the sum of squared residuals under the null hypothesis and $SCR_{1} under the alternative hypothesis. 
+
+This test statistic is to be compared with the quantile of order $\alpha$ of the Dickey-Fuller distribution. 
+
+If the null hypothesis is rejected, that is to say if $\rho\ne1$ then we can say that there is no unit root in the serie and therefore that the serie is stationary.
+
+## Annex E: the Ljung-Box test
+\label{subsec:annexE}
+
+This test evaluates the auto-correlation of the error terms $\epsilon_t$.
+
+We note:
+
+$$
+\hat{\rho_{\epsilon}}(h)=\frac{\frac{1}{n-1}\sum\limits_{i=1}^{n-h}\epsilon_i\epsilon_{i+h}}{\frac{1}{n}\sum\limits_{i=1}^{n}\epsilon_i^2}
+$$
+
+The test statistic is:
+
+$$
+Q_{LB}=n(n+2)\sum\limits_{h=1}^{k}\frac{\hat{\rho_{\epsilon}}^2(h)}{n-h}
+$$
+
+Where k stands for the number of lags. 
+
+Under $(H_0)$  $Q_{LB}$ follows a $\chi^2$ distribution with k degrees of freedom. The null hypothesis is rejected if $Q_{LB} > \chi_{1-\alpha}^2(k)$ where $\chi_{1-\alpha}^2(k)$ is the quantile of order $1-\alpha$ of a $\chi^2$ distribution with k degrees of freedom.
+
+In R the function 'LjungBox' in the 'portes' package can be used.
+
+Multivariate Ljung-Box test:
+
+https://stats.stackexchange.com/questions/94741/ljung-box-test-for-a-multivariate-time-series
