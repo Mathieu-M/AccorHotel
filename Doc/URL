@@ -4,3 +4,15 @@ https://onlinecourses.science.psu.edu/stat510/node/79
 Unit root test:
 http://www.econ.uiuc.edu/~econ508/R/e-ta8_R.html
 
+Cointegration:
+https://stats.stackexchange.com/questions/130660/test-for-cointegration-between-two-time-series-using-engle-granger-two-step-meth
+
+Mann-Kendall trend test:
+http://vsp.pnnl.gov/help/Vsample/Design_Trend_Mann_Kendall.htm
+
+Periodogram:
+https://onlinecourses.science.psu.edu/stat510/?q=book/export/html/52
+https://stats.stackexchange.com/questions/16117/what-method-can-be-used-to-detect-seasonality-in-data
+
+Multivariate Ljung-Box test:
+https://stats.stackexchange.com/questions/94741/ljung-box-test-for-a-multivariate-time-series
